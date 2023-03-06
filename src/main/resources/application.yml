@@ -1,0 +1,71 @@
+#security
+
+scheme: http
+keycloak-port: 8442
+keycloak-issuer: ${scheme}://localhost:${keycloak-port}/realms/master
+
+server:
+  error:
+    include-message: always
+  ssl:
+    enabled: false
+  servlet:
+    context-path: /api
+
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    password: root
+    username: postgres
+    url: jdbc:postgresql://localhost:5432/mygameslib
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+com:
+  c4-soft:
+    springaddons:
+      security:
+        cors:
+          - path: /**
+        issuers:
+          - location: ${keycloak-issuer}
+            username-claim: preferred_username
+            authorities:
+              - path: $.realm_access.roles
+              - path: $.resource_access.*.roles
+        permit-all:
+          - "/actuator/health/readiness"
+          - "/actuator/health/liveness"
+          - "/v3/api-docs/**"
+
+
+#logging:
+#  level:
+#    org:
+#      springframework:
+#        security: DEBUG
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+springdoc:
+  api-docs:
+    path: /api-docs
+
+
